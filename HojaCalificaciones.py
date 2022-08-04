@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import argparse
 import sys
 import os
 import csv
 import datetime
-import re	#Para eliminar las etiquetas html de un texto
+import re
 import subprocess
 import json
 import pathlib
@@ -20,13 +19,19 @@ from moodleteacher.requests import MoodleRequest
 # en función del código fuente
 sys.path.append(os.path.realpath('.'))
 
-# Funcion que sirve para eliminar todas las etiquetas html de un texto introducido para poder rescatar
-# el texto correspondiente a los comentarios de las entregas de los usuarios en una tarea
+
 def strip_tags(valor):
+	"""
+        Elimina todas las etiquetas html de un texto introducido.
+        """
 	return re.sub(r'<[^>]*?>', '', valor)
 
-# Funcion para calcular el nombre del mes a partir de un nombre dado en ingles
+
 def calculaMes(name):
+	"""
+        Funcion para calcular el nombre del mes a partir de un nombre dado en inglés.
+        """
+
 	if name == 'January':
 		name = 'enero'
 	elif name == 'February':
@@ -55,8 +60,12 @@ def calculaMes(name):
 	return name
 	
 	
-# Funcion para calcular el nombre de un dia de la semana en función de un entero, donde el 0 es lunes y el 6 domingo
+
 def calculaDia(day):
+	"""
+        Funcion para calcular el nombre de un dia de la semana en función de un entero, donde el 0 es lunes y el 6 domingo.
+        """
+        
 	if day == 0:
 		day = 'lunes'
 	elif day == 1:
@@ -75,14 +84,27 @@ def calculaDia(day):
 	return day
 
 
-def subirNota(courseid, assignmentname, userid, grade, fb, draftareaid):
-	conn = MoodleConnection(interactive=True)
-	
+def subirNota(conn, courseid, assignmentname, userid, grade, fb, draftareaid):
+	"""
+        Sube la calificación y el feedback (Tanto en texto como en archivo de retroalimentacion) correspondiente
+        de un usuario a una tarea de un curso determinado
+        
+        Args:
+            conn:        	El objeto de MoodleConnection.
+            courseid:    	Id del curso de la tarea.
+            assignmentname: 	Nombre de la tarea.
+            userid:     	Id del usuario al que se evalúa.
+            grade:      	Calificación de la tarea.
+            fb:     		Feedback en texto de la entrega.
+            draftareaid:     	Id del draft area donde se almacena el archivo de retroalimentación.
+        """
+        
 	# Creamos los objetos de curso y assignment correspondientes en funcion de los argumentos recibidos
 	course = MoodleCourse.from_course_id(conn, courseid)
 	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	userSubmission = None
 	
+	# Recorremos todas las entregas hasta encontrar la deseada, y subimos su calificación y feedback correspondiente
 	for submission in assignment.submissions():
 		user = MoodleUser.from_userid(conn, submission.userid)
 		if str(user.id_) == str(userid):
@@ -95,23 +117,27 @@ def subirNota(courseid, assignmentname, userid, grade, fb, draftareaid):
 	print('No hay ninguna entrega del usuario a esta tarea')
 
 
-def descarga(courseid, assignmentname):
-	#import logging
-	#logging.basicConfig(level=logging.DEBUG)
-
-    	# Preparamos la conexión a nuestro Moodle
-    	# La etiqueta interactive nos asegura que se le pregunta al usuario por sus credenciales
-    	# antes de realizar la conexion, los cuales seran almacenados en ~/.moodleteacher para la próxima conexión
-	conn = MoodleConnection(interactive=True)
+def descarga(conn, courseid, assignmentname):
+	"""
+        Descarga la hoja de calificaciones de la tarea indicada, con el formato original de la misma
+        
+        Args:
+            conn:        	El objeto de MoodleConnection.
+            courseid:    	Id del curso de la tarea.
+            assignmentname: 	Nombre de la tarea.
+	"""
 	
 	# Obtenemos la tarea en función del curso y su nombre
 	course = MoodleCourse.from_course_id(conn, courseid)
 	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	
-	nombreArchivo = 'Calificaciones_' + assignmentname + '.csv'
+	# Definimos el nombre que tendra el fichero de la hoja de calificaciones
+	nombreHoja = 'Calificaciones_' + assignmentname + '.csv'
 	
 	# Creamos un fichero nuevo de tipo csv para replicar la hoja de calificaciones de Moodle
-	with open(nombreArchivo, 'w') as csvfile:
+	with open(nombreHoja, 'w') as csvfile:
+		
+		# Definimos los campos de cabecera que tendrá la hoja de calificaciones
 		fieldnames = ['Identificador', 'Nombre completo', 'Dirección de correo', 'Estado', 'Calificación', 
 				'Calificación máxima', 'La calificación puede ser cambiada', 'Última modificación (entrega)',
 				'Última modificación (calificación)', 'Comentarios de retroalimentación']
@@ -149,7 +175,7 @@ def descarga(courseid, assignmentname):
 					cambiada = 'No'
 				
 				# Averiguamos si el usuario ha realizado la entrega de la tarea
-				print(substatus['lastattempt']['submission'])
+				print('Descargando')
 				estado = substatus['lastattempt']['submission']['status']
 				if estado == 'new':
 					estado = 'Sin entrega'
@@ -197,24 +223,27 @@ def descarga(courseid, assignmentname):
 	print('FICHERO CREADO')
 
 	
-def subir(courseid, assignmentname):
-	#import logging
-	#logging.basicConfig(level=logging.DEBUG)
-
-    	# Preparamos la conexión a nuestro Moodle
-    	# La etiqueta interactive nos asegura que se le pregunta al usuario por sus credenciales
-    	# antes de realizar la conexion, los cuales seran almacenados en ~/.moodleteacher para la próxima conexión
-	conn = MoodleConnection(interactive=True)
+def subir(conn, courseid, assignmentname):
+	"""
+        Sube las calificaciones de la tarea indicada a partir de su hoja de calificaciones.
+        
+        Args:
+            conn:        	El objeto de MoodleConnection.
+            courseid:    	Id del curso de la tarea.
+            assignmentname: 	Nombre de la tarea.
+	"""
 	
 	# Obtenemos la tarea en función del curso y su nombre
 	course = MoodleCourse.from_course_id(conn, courseid)
 	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	
+	# Definimos el nombre del directorio que contiene las entregas
 	ruta = 'Entregas' + '_' + assignment.name
 	
-	nombreArchivo = 'Calificaciones_' + assignmentname + '.csv'
+	# Nombre del fichero de la hoja de calificaciones de dicha tarea
+	nombreHoja = 'Calificaciones_' + assignmentname + '.csv'
 	
-	with open(nombreArchivo, newline='') as File:  
+	with open(nombreHoja, newline='') as File:  
 		reader = csv.reader(File)
 		head = next(reader)
 
@@ -224,37 +253,50 @@ def subir(courseid, assignmentname):
 				iduser = row[0]
 				nota = 0.00001	# Nota del alumno
 				fb = ''	# Comentarios de feedback para la nota
+				if row[9]:
+					# De la fila 9 obtenemos el comentario de feedback en caso de que haya
+					fb = row[9]
 				if row[4]:
+					# De la fila 4 obtenemos la calificación en caso de que haya
 					nota = float(row[4])
 					nombrecompleto = row[1].replace(" ","")
 					carpeta = assignment.name + '_' + nombrecompleto
 					fichero = ruta + "/" + carpeta + "/output/analysis.html"
+					
+					# Subimos el fichero de retroalimentación y almacenamos el id de su draft area
 					p = subprocess.check_output(["curl", "-X", "POST", "-F", "file_1=@" + fichero,
 						"http://127.0.0.1/moodle/webservice/upload.php?token=f51e7fedd7a08f0bb11fc2a10d8598c1"])
 					a = p.decode('utf-8')
 					b = re.findall(r'\d+',a)
 					itemid = b[2]
-					print(itemid)
-				
-					subirNota(courseid, assignmentname, iduser, nota, fb, itemid)
-				
-				'''
-				if row[9]:
-					fb = row[9]
-				'''	
+					
+					# Subimos al Moodle la calificación y el feedback correspondiente
+					subirNota(conn, courseid, assignmentname, iduser, nota, fb, itemid)
 				
 	
 	print('Calificaciones subidas satisfactoriamente')
 
-def apuntarNotas(nota, userid, diccionario, nombreArchivo):
-	with open(nombreArchivo, newline='') as File:  
+def apuntarNotas(calificaciones, nombreHoja):
+	"""
+        Escribe las calificaciones correspondientes en una hoja de calificaciones a partir de un diccionario cuya llave es el id del
+        usuario y el contenido es su calificación en la tarea
+        
+        Args:
+            calificaciones: 	Diccionario que contiene la tupla id del usuario y calificación
+            nombreArchivo:	Nombre del fichero de la hoja de calificaciones
+	"""
+	
+	# Leemos el contenido de la hoja de calificaciones y lo almacenamos
+	with open(nombreHoja, newline='') as File:  
 		reader = csv.reader(File)
 		data = [line for line in reader]
-			
-	with open(nombreArchivo, 'w') as csvfile:
+	
+	# Modificamos el contenido en función de los datos contenidos en el diccionario 'calificaciones' y 
+	# lo sobreescribimos en la hoja de calificaciones		
+	with open(nombreHoja, 'w') as csvfile:
 		for linea in data:
-			if (linea[0] != "Identificador") and (int(linea[0]) in diccionario.keys()):
-				linea[4] = diccionario[int(linea[0])]
+			if (linea[0] != "Identificador") and (int(linea[0]) in calificaciones.keys()):
+				linea[4] = calificaciones[int(linea[0])]
 		cabecera = data[0]
 		writer = csv.DictWriter(csvfile, fieldnames=cabecera)
 		writer.writeheader()
@@ -264,4 +306,3 @@ def apuntarNotas(nota, userid, diccionario, nombreArchivo):
 			writer.writerow({cabecera[0]: alu[0], cabecera[1]: alu[1], cabecera[2]: alu[2], cabecera[3]: alu[3],
 				cabecera[4]: alu[4], cabecera[5]: alu[5], cabecera[6]: alu[6], cabecera[7]: alu[7],
 				cabecera[8]: alu[8], cabecera[9]: alu[9]})
-
