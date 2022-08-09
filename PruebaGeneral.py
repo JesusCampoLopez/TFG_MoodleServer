@@ -8,7 +8,7 @@ import sys
 import os
 import subprocess
 import descargarEntregas
-import HojaCalificaciones
+import hojacalificaciones
 
 # Allow execution of script from project root, based on the library
 # source code
@@ -18,6 +18,7 @@ from moodleteacher.connection import MoodleConnection      # NOQA
 from moodleteacher.users import MoodleUser      # NOQA
 from moodleteacher.courses import MoodleCourse      # NOQA
 from moodleteacher.requests import MoodleRequest      # NOQA
+from moodleteacher.assignments import MoodleAssignment
 
 if __name__ == '__main__':
 	#import logging
@@ -35,21 +36,29 @@ if __name__ == '__main__':
 	parser.add_argument("-a", "--assignmentname", help="Assignment name (check the name of the assignment).", required=True, type=str)
 	args = parser.parse_args()
 	
+	course = MoodleCourse.from_course_id(conn, args.courseid)
+	assignment = MoodleAssignment.from_assignment_name(course, args.assignmentname)
+	
+	# Comprobamos si existe la tarea
+	if assignment is None:
+		print("No existe ninguna tarea con ese nombre")
+		exit() 
+	
 	#Primero de todo descargamos todas las entregas realizadas por los alumnos en esta tarea
 	#Recopilamos el numero de alumnos que han hecho entregas, los usuarios en sí y los nombres de los ficheros que entregaron
-	p, u, f = descargarEntregas.descargarEntregas(conn, args.courseid, args.assignmentname)
+	u, f = descargarEntregas.descargarEntregas(conn, course, assignment)
 	
 	#Establecemos el directorio donde se almacenan todas las entregas
 	path = "Entregas_" + args.assignmentname
 	
 	#Descargamos la hoja de calificaciones de dicha tarea
-	HojaCalificaciones.descarga(args.courseid, args.assignmentname)
+	hojacalificaciones.descarga(conn, course, assignment)
 	
 	#Este diccionario contendra la tupla del id del usuario y su respectiva nota en la tarea
 	diccionario = {}
 	
 	#Recorremos todas las entregas realizadas por los alumnos
-	for i in range(p):
+	for i in range(len(u)):
 		#Esta sera la ruta del alumno correspondiente a esta iteracion
 		totalpath = path + "/" + args.assignmentname + "_" + u[i].fullname.replace(" ","") + "/" + f[i]
 		
@@ -62,9 +71,9 @@ if __name__ == '__main__':
 	nombreArchivo = 'Calificaciones_' + args.assignmentname + '.csv'
 	
 	#Una vez calificadas todas las entregas con la herramienta, actualizamos nuestra hoja de calificaciones apuntando las notas	
-	HojaCalificaciones.apuntarNotas(r, u[i].id_, diccionario, nombreArchivo)
+	hojacalificaciones.apuntarNotas(diccionario, nombreArchivo)
 	
 	#Una vez actualizadas las notas en la hoja de calificaciones, a partir de la misma subimos las notas a Moodle
-	HojaCalificaciones.subir(args.courseid, args.assignmentname)
+	hojacalificaciones.subir(conn, assignment)
 	
 	
