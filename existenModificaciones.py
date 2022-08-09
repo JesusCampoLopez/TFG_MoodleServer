@@ -15,10 +15,18 @@ from moodleteacher.users import MoodleUser      # NOQA
 from moodleteacher.assignments import MoodleAssignment 
 from moodleteacher.requests import MoodleRequest
 
-def modificaciones(conn, courseid, assignmentname, userid):
-	
-	course = MoodleCourse.from_course_id(conn, courseid)
-	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
+def modificaciones(conn, assignment, userid):
+	"""
+        Comprueba si existen modificaciones en la entrega de un alumno en una tarea desde la ultima vez que se califico la misma.
+        
+        Args:
+            conn:        	El objeto de MoodleConnection.
+            assignment: 	El objeto de la tarea.
+            userid:		Id del usuario
+        Returns:
+            True: 		En caso de que sea necesario calificar o recalificar la entrega
+            False:		En caso de que no sea necesario recalificar la entrega
+	"""
 	
 	params = {'assignid': assignment.id_, 'userid': userid}
 			
@@ -46,6 +54,3 @@ def modificaciones(conn, courseid, assignmentname, userid):
 		print("No se necesita recalificar la entrega del alumno")
 		return False
 		
-		
-		
-	
