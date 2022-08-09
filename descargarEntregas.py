@@ -24,7 +24,7 @@ def strip_tags(valor):
 	return re.sub(r'<[^>]*?>', '', valor)
 
 
-def descargarEntregas(conn, courseid, assignmentname):
+def descargarEntregas(conn, course, assignment):
 	"""
         Descarga todas las entregas realizadas por los usuarios sobre la tarea indicada, creando un directorio para cada usuario
         el cual contiene todos los ficheros de su entrega.
@@ -40,10 +40,6 @@ def descargarEntregas(conn, courseid, assignmentname):
 	
 	# Almaceno la ruta del fichero actual
 	path = pathlib.Path().absolute()
-
-	# Creamos los objetos de curso y assignment correspondientes en funcion de los argumentos recibidos
-	course = MoodleCourse.from_course_id(conn, courseid)
-	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	
 	ficheros = []
 	users = []
@@ -65,7 +61,6 @@ def descargarEntregas(conn, courseid, assignmentname):
 				shutil.rmtree(str(path) + '/' + 'Entregas' + '_' + assignment.name + '/' + assignment.name + '_' + nombreUsuario)
 			
 			# Creamos un directorio para cada usuario que ha realizado una entrega
-			print("Entro a crear a " + user.fullname)
 			os.makedirs(os.path.join('Entregas' + '_' + assignment.name , assignment.name + '_' + nombreUsuario))
 			
 			# En caso de tener comentario, mostramos el comentario del usuario por pantalla
