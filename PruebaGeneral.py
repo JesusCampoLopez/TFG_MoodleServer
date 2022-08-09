@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-#
-# Example for retrieving submission details
-#
 
 import argparse
 import sys
