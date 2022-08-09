@@ -84,24 +84,20 @@ def calculaDia(day):
 	return day
 
 
-def subirNota(conn, courseid, assignmentname, userid, grade, fb, draftareaid):
+def subirNota(conn, assignment, userid, grade, fb, draftareaid):
 	"""
         Sube la calificación y el feedback (Tanto en texto como en archivo de retroalimentacion) correspondiente
         de un usuario a una tarea de un curso determinado
         
         Args:
             conn:        	El objeto de MoodleConnection.
-            courseid:    	Id del curso de la tarea.
-            assignmentname: 	Nombre de la tarea.
+            assignment: 	El objeto de la tarea.
             userid:     	Id del usuario al que se evalúa.
             grade:      	Calificación de la tarea.
             fb:     		Feedback en texto de la entrega.
             draftareaid:     	Id del draft area donde se almacena el archivo de retroalimentación.
         """
         
-	# Creamos los objetos de curso y assignment correspondientes en funcion de los argumentos recibidos
-	course = MoodleCourse.from_course_id(conn, courseid)
-	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	userSubmission = None
 	
 	# Recorremos todas las entregas hasta encontrar la deseada, y subimos su calificación y feedback correspondiente
@@ -111,28 +107,25 @@ def subirNota(conn, courseid, assignmentname, userid, grade, fb, draftareaid):
 			username = user.fullname
 			userSubmission = submission
 			userSubmission.save_grade(grade, draftareaid, feedback=fb)
-			print('Se ha evaluado correctamente la tarea ' + assignmentname + ' a el usuario ' + username)
+			print('Se ha evaluado correctamente la tarea ' + assignment.name + ' a el usuario ' + username)
 			return
 	
 	print('No hay ninguna entrega del usuario a esta tarea')
 
 
-def descarga(conn, courseid, assignmentname):
+def descarga(conn, course, assignment):
 	"""
         Descarga la hoja de calificaciones de la tarea indicada, con el formato original de la misma
         
         Args:
             conn:        	El objeto de MoodleConnection.
-            courseid:    	Id del curso de la tarea.
-            assignmentname: 	Nombre de la tarea.
+            course:    	El objeto del curso.
+            assignment: 	El objeto de la tarea.
 	"""
 	
-	# Obtenemos la tarea en función del curso y su nombre
-	course = MoodleCourse.from_course_id(conn, courseid)
-	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	
 	# Definimos el nombre que tendra el fichero de la hoja de calificaciones
-	nombreHoja = 'Calificaciones_' + assignmentname + '.csv'
+	nombreHoja = 'Calificaciones_' + assignment.name + '.csv'
 	
 	# Creamos un fichero nuevo de tipo csv para replicar la hoja de calificaciones de Moodle
 	with open(nombreHoja, 'w') as csvfile:
@@ -223,25 +216,20 @@ def descarga(conn, courseid, assignmentname):
 	print('FICHERO CREADO')
 
 	
-def subir(conn, courseid, assignmentname):
+def subir(conn, assignment):
 	"""
         Sube las calificaciones de la tarea indicada a partir de su hoja de calificaciones.
         
         Args:
             conn:        	El objeto de MoodleConnection.
-            courseid:    	Id del curso de la tarea.
-            assignmentname: 	Nombre de la tarea.
+            assignment: 	El objeto de la tarea.
 	"""
-	
-	# Obtenemos la tarea en función del curso y su nombre
-	course = MoodleCourse.from_course_id(conn, courseid)
-	assignment = MoodleAssignment.from_assignment_name(course, assignmentname)
 	
 	# Definimos el nombre del directorio que contiene las entregas
 	ruta = 'Entregas' + '_' + assignment.name
 	
 	# Nombre del fichero de la hoja de calificaciones de dicha tarea
-	nombreHoja = 'Calificaciones_' + assignmentname + '.csv'
+	nombreHoja = 'Calificaciones_' + assignment.name + '.csv'
 	
 	with open(nombreHoja, newline='') as File:  
 		reader = csv.reader(File)
@@ -271,7 +259,7 @@ def subir(conn, courseid, assignmentname):
 					itemid = b[2]
 					
 					# Subimos al Moodle la calificación y el feedback correspondiente
-					subirNota(conn, courseid, assignmentname, iduser, nota, fb, itemid)
+					subirNota(conn, assignment, iduser, nota, fb, itemid)
 				
 	
 	print('Calificaciones subidas satisfactoriamente')
