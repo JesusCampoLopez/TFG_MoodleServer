@@ -4,10 +4,10 @@ import argparse
 import sys
 import os
 import subprocess
-import descargarEntregas
+import entregas
 import hojacalificaciones
-import existenModificaciones
 import time
+import re
 
 # Allow execution of script from project root, based on the library
 # source code
@@ -47,33 +47,36 @@ if __name__ == '__main__':
 	while(True):
 		for submission in assignment.submissions():
 			user = MoodleUser.from_userid(conn, submission.userid)
-			bool = existenModificaciones.modificaciones(conn, assignment, user.id_)
+			bool = entregas.existenModificaciones(conn, assignment, user.id_)
 			if bool:
-				u, f = descargarEntregas.descargarEntregas(conn, course, assignment)
 				
-				# Descargamos la hoja de calificaciones de dicha tarea
-				hojacalificaciones.descarga(conn, course, assignment)
+				# Descargamos la entrega del usuario del que se necesita recalificar
+				u, f = entregas.descargaPorUsuario(conn, course, assignment, user.id_)
 				
-				# Este diccionario contendra la tupla del id del usuario y su respectiva nota en la tarea
-				diccionario = {}
-				
-				# Recorremos todas las entregas realizadas por los alumnos
-				for i in range(len(u)):
-					# Esta sera la ruta del alumno correspondiente a esta iteracion
-					totalpath = path + "/" + args.assignmentname + "_" + u[i].fullname.replace(" ","") + "/" + f[i]
+				# Esta es la ruta donde se almacena la entrega del usuario
+				totalpath = path + "/" + args.assignmentname + "_" + u.fullname.replace(" ","") + "/" + f
 					
-					# Ejecutamos la herramienta correspondiente para calificar la entrega
-					r = subprocess.call(["./intro_sw_static_check.sh",totalpath,"config.yaml"])
+				# Ejecutamos la herramienta correspondiente para calificar la entrega del usuario
+				r = subprocess.call(["./intro_sw_static_check.sh",totalpath,"config.yaml"])
+				fb = ''
+				
+				# Definimos la ruta donde se almacena el fichero de retroalimentacion
+				nombrecompleto = user.fullname.replace(" ","")
+				carpeta = assignment.name + '_' + nombrecompleto
+				fichero = path + "/" + carpeta + "/output/analysis.html"
 					
-					# Actualizamos el diccionarios, con el par id de usuario y su nota
-					diccionario[u[i].id_] = r
+				# Subimos el fichero de retroalimentación y almacenamos el id de su draft area
+				p = subprocess.check_output(["curl", "-X", "POST", "-F", "file_1=@" + fichero,
+						"http://127.0.0.1/moodle/webservice/upload.php?token=f51e7fedd7a08f0bb11fc2a10d8598c1"])
+				a = p.decode('utf-8')
+				b = re.findall(r'\d+',a)
+				itemid = b[2]
 				
-				nombreArchivo = 'Calificaciones_' + args.assignmentname + '.csv'
-				
-				# Una vez calificadas todas las entregas con la herramienta, actualizamos nuestra
-				# hoja de calificaciones apuntando las notas	
-				hojacalificaciones.apuntarNotas(diccionario, nombreArchivo)
-				
-				# Una vez actualizadas las notas en la hoja de calificaciones, a partir de la misma subimos las notas a Moodle
-				hojacalificaciones.subir(conn, assignment)
+				# Subimos la calificación del usuario junto con su retroalimentacion al servidor de Moodle
+				hojacalificaciones.subirNota(conn, assignment, user.id_, r, fb, itemid)
+		
+		# Esperamos 30 segundos para volver a comprobar si han habido modificaciones
 		time.sleep(30)
+	
+	
+	
