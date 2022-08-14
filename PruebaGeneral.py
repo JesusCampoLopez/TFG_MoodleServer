@@ -4,7 +4,7 @@ import argparse
 import sys
 import os
 import subprocess
-import descargarEntregas
+import entregas
 import hojacalificaciones
 
 # Allow execution of script from project root, based on the library
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	
 	# Primero de todo descargamos todas las entregas realizadas por los alumnos en esta tarea
 	# Recopilamos el numero de alumnos que han hecho entregas, los usuarios en sí y los nombres de los ficheros que entregaron
-	u, f = descargarEntregas.descargarEntregas(conn, course, assignment)
+	u, f = entregas.descargaTodas(conn, course, assignment)
 	
 	# Establecemos el directorio donde se almacenan todas las entregas
 	path = "Entregas_" + args.assignmentname
