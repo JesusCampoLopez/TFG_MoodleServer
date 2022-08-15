@@ -14,7 +14,9 @@ Requiere: sys, os, csv, datetime, re, subprocess, json, pathlib
 Este fichero python contiene todas las funciones relacionadas con las entregas, desde descargarlas hasta comprobar si existen modificaciones en las mismas.
 
 descargaTodas: Esta función descarga las entregas sobre una tarea de todos los usuarios.
+
 descargaPorUsuario: Descarga la entrega sobre una tarea de un unico usuario que se pasa como parámetro
+
 existenModificaciones: Comprueba si han habido modificaciones en una entrega de un usuario y devuelve 'true' si se necesita recalificar la entrega.
 
 'hojaCalificaciones.py'
