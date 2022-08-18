@@ -7,7 +7,7 @@ A su vez, tenemos dos scripts de python que hacen uso de estas diferentes funcio
 
 Explicación de los ficheros:
 
-**'entregas.py'**
+**'entregas.py':**
 
 Librerias que requiere: sys, os, csv, datetime, re, subprocess, json, pathlib
 
@@ -20,7 +20,7 @@ Este fichero python contiene todas las funciones relacionadas con las entregas, 
 ***existenModificaciones:*** Comprueba si han habido modificaciones en una entrega de un usuario y devuelve 'true' si se necesita recalificar la entrega.
 
 
-**'hojaCalificaciones.py'**
+**'hojaCalificaciones.py':**
 
 
 Librerias que requiere: sys, os, pathlib, re, shutil
@@ -41,7 +41,9 @@ como subir notas al mismo Servidor desde estas hojas de calificaciones.
 ***apuntarNotas***: Anota las notas de los alumnos en una hoja de calificaciones a partir de un diccionario que contiene la tupla id del usuario y su calificacion
 
 
+
 **PRUEBAS**
+
 Como se ha explicado previamente, encontramos dos pruebas diferentes, las cuales se explican a continuación:
 
 ***PruebaGeneral.py***: En este script de python se realiza un proceso el cual descarga todas las entregas de una misma tarea de un curso del servidor Moodle al cual nos conectamos, posteriormente descarga las hojas de calificaciones, aplica una herramienta de ejemplo la cual califica cada una de las entregas y genera ficheros de retroalimentacio los cuales se guardan en directorios específicos, anota dichas calificaciones en la hoja de calificaciones previamente descargada y por último sube las calificaciones y los ficheros de retroalimentacion al servidor de Moodle a partir de la hoja de calificaciones. Este proceso se realiza tan solo una vez, por lo que está enfocado a tareas las cuales sean de evaluación única, es decir, que las calificaciones de los alumnos en dichas tareas serán definitivas y no se admitirán modificaciones.
