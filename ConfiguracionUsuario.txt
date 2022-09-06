@@ -1,0 +1,11 @@
+CONFIGURACION DE USUARIO
+Escriba los datos a continuación de la flecha (->) sin dejar ningun espacio (Ej: NombreCompleto->Jesus Campo Lopez)
+
+Introduce el nombre completo del usuario de Moodle que desea ejecutar la herramienta (Ej: Ramon Gonzalez Gomez):
+NombreCompleto->Ramon Gonzalez Gomez
+
+Introduce el token perteneciente al usuario de Moodle que desea ejecutar la herramienta (Ej: f51e7fedd7a08f0bb11fc2a10d8598c1):
+Token->f51e7fedd7a08f0bb11fc2a10d8598c1
+
+Introduce la IP del servidor de Moodle al que se desea conectar (Ej: http://127.0.0.1/moodle):
+Moodle_host->http://127.0.0.1/moodle
