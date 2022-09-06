@@ -19,10 +19,16 @@ from moodleteacher.assignments import MoodleAssignment
 
 if __name__ == '__main__':
 
-    	# Preparamos la conexion a nuestro Moodle
-    	# Con la flag interactive puesta en True nos aseguramos que el usuario es preguntado por sus credenciales, 
-    	# los cuales se almacenaran en ~/.moodleteacher para la siguiente conexión
-	conn = MoodleConnection(interactive=True)
+    	# Preparamos la conexion a nuestro servidor de Moodle
+    	# Recuperamos los datos del moodlehost y el token del usuario a través del fichero de configuracion
+	
+	configuracion = open("ConfiguracionUsuario.txt","r")
+	datos = configuracion.readlines()
+	
+	moodleHost = datos[10].split("->")[1].rstrip()
+	tokenUsuario = datos[7].split("->")[1].rstrip()
+	
+	conn = MoodleConnection(moodle_host=moodleHost, token=tokenUsuario)
 
 
 	# Añado los argumentos id del curso y nombre de la tarea
