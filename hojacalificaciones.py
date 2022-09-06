@@ -149,8 +149,11 @@ def descarga(conn, course, assignment):
 			# Guardamos el usuario
 			user = MoodleUser.from_userid(conn, userid)
 			
+			configuracion = open("ConfiguracionUsuario.txt","r")
+			nombreProfesor = configuracion.readlines()[4].split("->")[1].rstrip()
+			
 			# Si el usuario es el profesor no recopilamos ningún dato
-			if user.fullname != 'Ramon Gonzalez Gomez':
+			if user.fullname != nombreProfesor:
 			
 				nombrecompleto = user.fullname
 				correo = user.email
@@ -168,7 +171,6 @@ def descarga(conn, course, assignment):
 					cambiada = 'No'
 				
 				# Averiguamos si el usuario ha realizado la entrega de la tarea
-				print('Descargando')
 				estado = substatus['lastattempt']['submission']['status']
 				if estado == 'new':
 					estado = 'Sin entrega'
@@ -251,9 +253,16 @@ def subir(conn, assignment):
 					carpeta = assignment.name + '_' + nombrecompleto
 					fichero = ruta + "/" + carpeta + "/output/analysis.html"
 					
+					#Recuperamos los datos de la ip del servidor y el token del usuario
+					configuracion = open("ConfiguracionUsuario.txt","r")
+					datos = configuracion.readlines()
+						
+					moodleHost = datos[10].split("->")[1].rstrip()
+					tokenUsuario = datos[7].split("->")[1].rstrip()
+					
 					# Subimos el fichero de retroalimentación y almacenamos el id de su draft area
 					p = subprocess.check_output(["curl", "-X", "POST", "-F", "file_1=@" + fichero,
-						"http://127.0.0.1/moodle/webservice/upload.php?token=f51e7fedd7a08f0bb11fc2a10d8598c1"])
+						moodleHost + "/webservice/upload.php?token=" + tokenUsuario])
 					a = p.decode('utf-8')
 					b = re.findall(r'\d+',a)
 					itemid = b[2]
