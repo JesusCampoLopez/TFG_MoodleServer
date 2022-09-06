@@ -7,8 +7,8 @@ import subprocess
 import entregas
 import hojacalificaciones
 
-# Allow execution of script from project root, based on the library
-# source code
+# Permite la ejecucion del script desde la ruta del proyecto, basado en el codigo fuente
+# de la libreria
 sys.path.append(os.path.realpath('.'))
 
 from moodleteacher.connection import MoodleConnection      # NOQA
